@@ -42,8 +42,34 @@ namespace TextFileProcessor
     private List<string> _directories;
     private List<string> _extensions;
 
-    public bool searchSubdirectories { get; set; } = true;
-    public bool caseSensitive { get; set; } = false;
+    private bool _searchSubdirectories;
+    private bool _caseSensitive;
+
+    public bool searchSubdirectories
+    {
+      get
+      {
+        return _searchSubdirectories;
+      }
+
+      set
+      {
+        _searchSubdirectories = value;
+      }
+    }
+
+    public bool caseSensitive
+    {
+      get
+      {
+        return _caseSensitive;
+      }
+
+      set
+      {
+        _caseSensitive = value;
+      }
+    }
 
     public FileSearch()
     {
