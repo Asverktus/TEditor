@@ -6,11 +6,13 @@ namespace TextFileProcessor
 {
   public class TEditor
   {
-    private TDocument _document;
+    private const int InitialStateCount = 1;
+
+    private TDocument? _document;
     private Stack<TMemento> _undoStack;
     private Stack<TMemento> _redoStack;
 
-    public bool isDocumentOpen
+    public bool IsDocumentOpen
     {
       get
       {
@@ -22,6 +24,7 @@ namespace TextFileProcessor
     {
       _undoStack = new Stack<TMemento>();
       _redoStack = new Stack<TMemento>();
+      _document = null;
     }
 
     public void OpenFile(string path)
@@ -86,10 +89,12 @@ namespace TextFileProcessor
 
     public bool Undo()
     {
-      int minUndoStackSize;
-      minUndoStackSize = 1;
+      if (_document == null)
+      {
+        return false;
+      }
 
-      if (_undoStack.Count <= minUndoStackSize)
+      if (_undoStack.Count <= InitialStateCount)
       {
         return false;
       }
@@ -109,6 +114,11 @@ namespace TextFileProcessor
 
     public bool Redo()
     {
+      if (_document == null)
+      {
+        return false;
+      }
+
       if (_redoStack.Count == 0)
       {
         return false;
@@ -160,6 +170,18 @@ namespace TextFileProcessor
       );
     }
 
+    public void SaveAs(string newPath)
+    {
+      if (_document == null)
+      {
+        Console.WriteLine("No document open");
+        return;
+      }
+
+      _document.SaveAs(newPath);
+      Console.WriteLine($"Saved as: {Path.GetFileName(newPath)}");
+    }
+
     public void ShowContent()
     {
       if (_document == null)
@@ -168,19 +190,21 @@ namespace TextFileProcessor
         return;
       }
 
-      Console.WriteLine("\n--- DOCUMENT CONTENT ---");
-      Console.WriteLine(_document.content);
-      Console.WriteLine("--- END OF DOCUMENT ---");
-
       int lineCount;
       lineCount = 0;
 
-      if (!string.IsNullOrEmpty(_document.content))
+      string contentToShow;
+      contentToShow = _document.content ?? "";
+
+      if (!string.IsNullOrEmpty(contentToShow))
       {
-        lineCount = _document.content.Split('\n').Length;
+        lineCount = contentToShow.Split('\n').Length;
       }
 
-      Console.WriteLine($"Stats: {_document.content.Length} chars, {lineCount} lines\n");
+      string stats;
+      stats = $"\n--- DOCUMENT CONTENT ---\n{contentToShow}\n--- END OF DOCUMENT ---\nStats: {contentToShow.Length} chars, {lineCount} lines\n";
+
+      Console.WriteLine(stats);
     }
   }
 }

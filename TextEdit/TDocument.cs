@@ -8,13 +8,16 @@ namespace TextFileProcessor
   [Serializable]
   public class TDocument
   {
-    public string filePath { get; private set; }
-    public string content { get; set; }
-    public DateTime lastModified { get; private set; }
+    private const int MinUndoStackSize = 1;
 
-    private TDocument()
+    public string? filePath { get; set; }
+    public string? content { get; set; }
+    public DateTime lastModified { get; set; }
+
+    public TDocument()
     {
-
+      filePath = null;
+      content = null;
     }
 
     public TDocument(string path)
@@ -38,7 +41,12 @@ namespace TextFileProcessor
 
     public void Save()
     {
-      string directory;
+      if (string.IsNullOrEmpty(filePath))
+      {
+        throw new Exception("File path is not set");
+      }
+
+      string? directory;
       directory = Path.GetDirectoryName(filePath);
 
       if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
@@ -46,14 +54,20 @@ namespace TextFileProcessor
         Directory.CreateDirectory(directory);
       }
 
-      File.WriteAllText(filePath, content);
+      File.WriteAllText(filePath, content ?? "");
       lastModified = File.GetLastWriteTime(filePath);
+    }
+
+    public void SaveAs(string newPath)
+    {
+      filePath = Path.GetFullPath(newPath);
+      Save();
     }
 
     public TMemento CreateMemento()
     {
       TMemento memento;
-      memento = new TMemento(content);
+      memento = new TMemento(content ?? "");
 
       return memento;
     }
@@ -109,30 +123,29 @@ namespace TextFileProcessor
 
     public void XmlSerialize(string targetPath)
     {
-      StreamWriter writer;
-      writer = new StreamWriter(targetPath);
+      XmlSerializer serializer;
+      serializer = new XmlSerializer(typeof(TDocument));
 
-      using (writer)
+      using (StreamWriter writer = new StreamWriter(targetPath, false, Encoding.UTF8))
       {
-        XmlSerializer serializer;
-        serializer = new XmlSerializer(typeof(TDocument));
-
         serializer.Serialize(writer, this);
       }
     }
 
     public static TDocument XmlDeserialize(string path)
     {
-      StreamReader reader;
-      reader = new StreamReader(path);
+      XmlSerializer serializer;
+      serializer = new XmlSerializer(typeof(TDocument));
 
-      using (reader)
+      using (StreamReader reader = new StreamReader(path, Encoding.UTF8))
       {
-        XmlSerializer serializer;
-        serializer = new XmlSerializer(typeof(TDocument));
+        TDocument? document;
+        document = (TDocument?)serializer.Deserialize(reader);
 
-        TDocument document;
-        document = (TDocument)serializer.Deserialize(reader);
+        if (document == null)
+        {
+          throw new Exception("Failed to deserialize XML document");
+        }
 
         return document;
       }
@@ -141,14 +154,14 @@ namespace TextFileProcessor
     public override string ToString()
     {
       string fileName;
-      fileName = Path.GetFileName(filePath);
+      fileName = Path.GetFileName(filePath ?? "unknown");
 
-      return $"{fileName}: {content.Length} chars, modified {lastModified:HH:mm:ss}";
+      return $"{fileName}: {(content ?? "").Length} chars, modified {lastModified:HH:mm:ss}";
     }
 
     public string GetFullPath()
     {
-      return filePath;
+      return filePath ?? "";
     }
   }
 }

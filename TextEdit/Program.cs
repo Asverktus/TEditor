@@ -17,11 +17,18 @@ namespace TextFileProcessor
     Save = 7,
     ShowContent = 8,
     SearchFiles = 9,
-    IndexFiles = 10
+    IndexFiles = 10,
+    SaveAsBinary = 11,
+    LoadBinary = 12,
+    SaveAsXml = 13,
+    LoadXml = 14,
+    BuildIndex = 15
   }
 
   class Program
   {
+    private static IndexBuilder? _indexBuilder;
+
     static void Main()
     {
       TEditor editor;
@@ -29,6 +36,8 @@ namespace TextFileProcessor
 
       FileSearch searcher;
       searcher = new FileSearch();
+
+      _indexBuilder = new IndexBuilder();
 
       string currentDir;
       currentDir = Directory.GetCurrentDirectory();
@@ -54,17 +63,21 @@ namespace TextFileProcessor
           "6. Redo\n" +
           "7. Save (shows full path)\n" +
           "8. Show content\n" +
-          "9. Search files\n" +
-          "10. Index files\n" +
+          "9. Search files (direct)\n" +
+          "10. Index files (direct search)\n" +
+          "11. Save as Binary\n" +
+          "12. Load Binary\n" +
+          "13. Save as XML\n" +
+          "14. Load XML\n" +
+          "15. Build index (fast search)\n" +
           "0. Exit"
         );
 
         Console.Write("Choose: ");
-        string input;
+        string? input;
         input = Console.ReadLine();
 
         int choice;
-
         bool parseResult;
         parseResult = int.TryParse(input, out choice);
 
@@ -88,38 +101,50 @@ namespace TextFileProcessor
           {
             case MenuCommand.OpenFile:
               Console.Write("Path: ");
-              string openPath;
+              string? openPath;
               openPath = Console.ReadLine();
+
+              if (string.IsNullOrWhiteSpace(openPath))
+              {
+                Console.WriteLine("Path cannot be empty");
+                break;
+              }
 
               editor.OpenFile(openPath);
               break;
 
             case MenuCommand.NewFile:
               Console.Write("Path: ");
-              string newPath;
+              string? newPath;
               newPath = Console.ReadLine();
 
+              if (string.IsNullOrWhiteSpace(newPath))
+              {
+                Console.WriteLine("Path cannot be empty");
+                break;
+              }
+
               Console.Write("Initial content (optional): ");
-              string initContent;
+              string? initContent;
               initContent = Console.ReadLine();
 
-              editor.CreateFile(newPath, initContent);
+              editor.CreateFile(newPath, initContent ?? "");
               break;
 
             case MenuCommand.EditContent:
               Console.Write("New content: ");
-              string newContent;
+              string? newContent;
               newContent = Console.ReadLine();
 
-              editor.EditContent(newContent);
+              editor.EditContent(newContent ?? "");
               break;
 
             case MenuCommand.AppendText:
               Console.Write("Text to append: ");
-              string appendText;
+              string? appendText;
               appendText = Console.ReadLine();
 
-              editor.AppendText(appendText);
+              editor.AppendText(appendText ?? "");
               break;
 
             case MenuCommand.Undo:
@@ -144,8 +169,14 @@ namespace TextFileProcessor
 
             case MenuCommand.SearchFiles:
               Console.Write("Keyword: ");
-              string keyword;
+              string? keyword;
               keyword = Console.ReadLine();
+
+              if (string.IsNullOrWhiteSpace(keyword))
+              {
+                Console.WriteLine("Keyword cannot be empty");
+                break;
+              }
 
               List<SearchResult> results;
               results = searcher.Search(keyword);
@@ -162,18 +193,22 @@ namespace TextFileProcessor
 
                 Console.WriteLine(resultMessage);
               }
-
               else
               {
                 Console.WriteLine("No files found");
               }
-
               break;
 
             case MenuCommand.IndexFiles:
               Console.Write("Keyword to index: ");
-              string indexKeyword;
+              string? indexKeyword;
               indexKeyword = Console.ReadLine();
+
+              if (string.IsNullOrWhiteSpace(indexKeyword))
+              {
+                Console.WriteLine("Keyword cannot be empty");
+                break;
+              }
 
               List<SearchResult> indexed;
               indexed = searcher.Search(indexKeyword);
@@ -185,10 +220,9 @@ namespace TextFileProcessor
               {
                 foreach (SearchResult result in indexed)
                 {
-                  indexMessage = indexMessage + $"\n   {result.fileName} - {result.occurrences} matches";
+                  indexMessage = indexMessage + $"\n   {result.FileName} - {result.Occurrences} matches";
                 }
               }
-
               else
               {
                 indexMessage = indexMessage + "\nNo matches found";
@@ -196,9 +230,92 @@ namespace TextFileProcessor
 
               Console.WriteLine(indexMessage);
               break;
+
+            case MenuCommand.SaveAsBinary:
+              if (!editor.IsDocumentOpen)
+              {
+                Console.WriteLine("No document open");
+                break;
+              }
+
+              Console.Write("Enter binary file path to save: ");
+              string? binaryPath;
+              binaryPath = Console.ReadLine();
+
+              Console.WriteLine("Binary serialization not fully implemented in this demo");
+              break;
+
+            case MenuCommand.LoadBinary:
+              Console.Write("Enter binary file path to load: ");
+              string? loadBinaryPath;
+              loadBinaryPath = Console.ReadLine();
+
+              Console.WriteLine("Binary deserialization not fully implemented in this demo");
+              break;
+
+            case MenuCommand.SaveAsXml:
+              if (!editor.IsDocumentOpen)
+              {
+                Console.WriteLine("No document open");
+                break;
+              }
+
+              Console.Write("Enter XML file path to save: ");
+              string? xmlPath;
+              xmlPath = Console.ReadLine();
+
+              Console.WriteLine("XML serialization not fully implemented in this demo");
+              break;
+
+            case MenuCommand.LoadXml:
+              Console.Write("Enter XML file path to load: ");
+              string? loadXmlPath;
+              loadXmlPath = Console.ReadLine();
+
+              Console.WriteLine("XML deserialization not fully implemented in this demo");
+              break;
+
+            case MenuCommand.BuildIndex:
+              Console.Write("Enter directory to index: ");
+              string? indexDir;
+              indexDir = Console.ReadLine();
+
+              if (string.IsNullOrWhiteSpace(indexDir))
+              {
+                indexDir = currentDir;
+              }
+
+              Console.Write("Enter keywords (comma separated): ");
+              string? keywordsInput;
+              keywordsInput = Console.ReadLine();
+
+              if (string.IsNullOrWhiteSpace(keywordsInput))
+              {
+                Console.WriteLine("Keywords cannot be empty");
+                break;
+              }
+
+              List<string> keywords;
+              keywords = keywordsInput.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                      .Select(k => k.Trim())
+                                      .ToList();
+
+              if (keywords.Count == 0)
+              {
+                Console.WriteLine("No valid keywords provided");
+                break;
+              }
+
+              if (_indexBuilder == null)
+              {
+                _indexBuilder = new IndexBuilder();
+              }
+
+              _indexBuilder.BuildIndex(indexDir, keywords, true);
+              Console.WriteLine("Index built successfully!");
+              break;
           }
         }
-
         catch (Exception ex)
         {
           Console.WriteLine($"Error: {ex.Message}");

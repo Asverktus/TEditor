@@ -7,33 +7,33 @@ namespace TextFileProcessor
 {
   public class SearchResult
   {
-    public string filePath { get; private set; }
-    public string fileName { get; private set; }
-    public string keyword { get; private set; }
-    public int occurrences { get; private set; }
-    public List<int> lineNumbers { get; private set; }
+    public string FilePath { get; private set; }
+    public string FileName { get; private set; }
+    public string Keyword { get; private set; }
+    public int Occurrences { get; private set; }
+    public List<int> LineNumbers { get; private set; }
 
     public SearchResult(string path, string keyword)
     {
-      filePath = path;
-      fileName = Path.GetFileName(path);
-      this.keyword = keyword;
-      occurrences = 0;
-      lineNumbers = new List<int>();
+      FilePath = path;
+      FileName = Path.GetFileName(path);
+      Keyword = keyword;
+      Occurrences = 0;
+      LineNumbers = new List<int>();
     }
 
     public void AddOccurrence(int lineNumber)
     {
-      ++occurrences;
-      lineNumbers.Add(lineNumber);
+      ++Occurrences;
+      LineNumbers.Add(lineNumber);
     }
 
     public override string ToString()
     {
       string lineNumbersStr;
-      lineNumbersStr = string.Join(", ", lineNumbers);
+      lineNumbersStr = string.Join(", ", LineNumbers);
 
-      return $"{fileName}: {occurrences} matches at lines {lineNumbersStr}";
+      return $"{FileName}: {Occurrences} matches at lines {lineNumbersStr}";
     }
   }
 
@@ -45,7 +45,7 @@ namespace TextFileProcessor
     private bool _searchSubdirectories;
     private bool _caseSensitive;
 
-    public bool searchSubdirectories
+    public bool SearchSubdirectories
     {
       get
       {
@@ -58,7 +58,7 @@ namespace TextFileProcessor
       }
     }
 
-    public bool caseSensitive
+    public bool CaseSensitive
     {
       get
       {
@@ -107,7 +107,7 @@ namespace TextFileProcessor
       files = new List<string>();
 
       SearchOption option;
-      option = searchSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+      option = SearchSubdirectories ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
 
       foreach (string dir in _directories)
       {
@@ -146,7 +146,7 @@ namespace TextFileProcessor
       }
 
       string searchKeyword;
-      searchKeyword = caseSensitive ? keyword : keyword.ToLower();
+      searchKeyword = CaseSensitive ? keyword : keyword.ToLower();
 
       foreach (string file in GetFiles())
       {
@@ -164,7 +164,7 @@ namespace TextFileProcessor
           foreach (string line in lines)
           {
             string compareLine;
-            compareLine = caseSensitive ? line : line.ToLower();
+            compareLine = CaseSensitive ? line : line.ToLower();
 
             if (compareLine.Contains(searchKeyword))
             {
@@ -174,14 +174,14 @@ namespace TextFileProcessor
             ++lineNum;
           }
 
-          if (result.occurrences > 0)
+          if (result.Occurrences > 0)
           {
             results.Add(result);
           }
         }
-        catch
+        catch (Exception ex)
         {
-
+          Console.WriteLine($"Error reading file {file}: {ex.Message}");
         }
       }
 
